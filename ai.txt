@@ -1,0 +1,174 @@
+Create Dim Hotel
+
+CREATE TABLE DimHotel
+(HotelID int auto_increment primary key,
+HotelName varchar(50) not null, 
+Rooms int, 
+HotelType varchar(50),
+StarRating int,
+Region varchar(50), 
+City varchar(50), 
+State varchar(50), 
+Country varchar(50));
+
+
+Create Dim Room
+
+CREATE TABLE DimRoom
+( RoomID int auto_increment primary key,
+RoomType varchar(50), 
+Max_Occupant int, 
+No_of_beds int,
+Room_side varchar(50),
+AC varchar(1),
+Renovation_year year);
+
+Create Dim Customer
+
+CREATE TABLE DimCustomer 
+(CustomerID int auto_increment primary key, 
+CustomerName varchar(50) not null, 
+Address varchar(100),
+Type_of_stay varchar(50),
+Check_in datetime, 
+Check_out 
+datetime, 
+Amount_paid decimal(19,4));
+
+Create Time table
+
+CREATE TABLE DimTime
+(Date date primary key,
+Day_of_week int,
+Day_of_month int,
+Week int,
+Month int,
+Year year,
+Holiday varchar(1));
+
+
+Create Fact Table
+
+CREATE TABLE FactHotelOccupancy 
+(HotelID int references DimHotel (HotelID),
+RoomID int references DimRoom(RoomID), 
+CustomerID int references DimCustomer(CustomerID), 
+Date date references 
+DimTime(Date),
+No_of_occupied_rooms int,
+No_of_vacant_rooms int,
+Revenue decimal(19,4), 
+primary key (HotelID, RoomID, CustomerID));
+
+
+Insert:
+
+INSERT INTO DimHotel 
+(HotelName, Rooms, HotelType, StarRating, Region, City, State, Country) 
+VALUES
+('Treehotel', 300, 'Inn', 4, 'Edeforsvag 2 A','Vidvag 97', 'Harads', 'Sweden'),
+('Kakslauttanen Arctic Resort', 200, 'Hotel', 4, 'Kiilopaantie 9', 'Kiilopaantie 9', 'Saariselka', 
+'Finland'),
+('Giraffe Manor', 500, 'Specialty Lodging', 3, 'Koitobos Rd', 'Koitobos Rd', 
+'Nairobi','Kenya'),
+('Fantasyland Hotel & Resort', 450, 'Hotel', 4, '17700 87 Ave NW','Edmonton', 'Alberta', 
+'Canada' ),
+('Ottoman Cave Suites', 700, 'Hotel', 5, 'AvcilarMahallesi', 'IlkokulSokak No 16', 'Goreme', 
+'Turkey' ),
+('Helgas Folly', 700, 'Hotel', 4, '70 Rajaphilla Mawatha', '70 RajaphillaMawatha', 'Kandy', 
+'Sri Lanka' );
+
+INSERT INTO DimRoom 
+(RoomType, Max_Occupant, No_of_beds, Room_side, AC, Renovation_year)
+VALUES 
+('Queen', 3, 3, 'West', 'Y', 2015), 
+('King', 2, 2, 'South', 'N', 2012),
+('King', 2, 2, 'West', 'Y', 2015), 
+('Suite', 4, 4, 'East', 'N', 2011), 
+('King', 2, 2, 'North', 'N', 1993), 
+('King', 2, 2, 'South', 'Y', 1980);
+
+
+INSERT INTO DimCustomer 
+(CustomerName, Address, Type_of_stay, Check_in, Check_out, Amount_paid) 
+VALUES
+(‘Krish Khatri', '061 Shenoy Nagar New Delhi-214996', 'Night', '2016-03-08 01:00:22', '2016-
+03-18-09:54:24', 16871.9772), 
+('NayantaraKalita', '72/64 JaggiZilaRaebareli 623911',' Night', '2018-06-27 22:07:35', '2018-06-
+30 08:18:50', 14708.9695), 
+('PurabRamaswamy', '67/74 Malhotra Ganj Mau-524031', 'Day', '2019-04-30 15:15:37', '2019-
+05-10 02:31:12', 14394.8425), 
+('NehmatVerma', '52/20 Thaman Gulbarga-366179', 'Day', '2015-06-01 11:22:44', '2015-06-26 
+05:27:48', 18337.4186), 
+('CArmaanJohal', 'HNo. 71 Basu Circle, Raiganj 310096', 'Day', '2015-12-06 08:32:13', '2015-
+12-14 19:25:12', 13656.1320),
+('KismatChada', '85/504 ShereChowkMehsana 483469', 'Day', '2012-12-21 18:06:03', '2012-12-
+28 05:28:15', 17314.9652);
+
+INSERT INTo DimTime 
+VALUES
+('2016-03-08', 2, 8, 10,3, 2016, N),
+('2018-06-27', 3, 27, 26, 6, 2018, 'N'),
+('2019-04-30', 2, 30, 18, 4, 2019, 'N'),
+('2015-06-01', 1, 1, 22, 6, 2015, 'N'),
+('2015-12-06', 7, 6, 49, 12, 2015, 'N'),
+('2012-12-21', 5, 21,51, 12, 2012, 'N');
+
+INSERT INTO FactHotelOccupancy 
+VALUES 
+(1, 2, 6, '2012-12-21', 60, 240, 11161382.6162),
+(2, 5, 4, '2015-06-01', 150, 50, 7696742.5189),
+(3,3, 1, '2016-03-08', 325, 175, 3904503.3812),
+(4, 4, 3, '2019-04-30', 236, 214, 4981383.1735),
+(5, 6,2, '2018-06-27', 284, 416, 7735696.0160),
+(6, 1, 5, '2015-12-06', 657, 43, 9987647.5030);
+
+Roll up :
+
+select Region, Country, State, City, sum(Revenue) from DimHotel inner join FactHotelOccupancy 
+on DimHotel.HotelID= FactHotelOccupancy.HotelID group by Region, Country, State, City with 
+rollup;
+
+Drill Down:
+
+select Country, StarRating.sum(Revenue) from DimHotel inner join FactHotelOccupancy on 
+DimHotel. HotelID= FactHotelOccupancy.HotelID where Country in ('Canada', 'Kenya') and 
+StarRating in (1,2,3,4,5) group by StarRating with rollup;
+
+
+Slice:
+
+Select Country, HotelType, sum(revenue) from DimHotel inner join FactHotelOccupancy 
+on DimHotel HotelID= FactHotelOccupancy.HotelID where HotelType='Hotel' GROUP 
+BY Country;
+
+Dice:
+
+Select Country, HotelType, sum(revenue) from DimHotel inner join FactHotelOccupancy 
+on DimHotel.HotelID = FactHotel Occupancy.HotelID where HotelType='Hotel' AND 
+Country = 'Canada' GROUP BY Country;
+
+Pivot:
+
+SELECT EXTRACT(YEAR FROM Date) year,EXTRACT(MONTH FROM Date) 
+month,SUM(Revenue)revenueFROM FactHotelOccupancy GROUP BY 
+EXTRACT(YEAR FROM Date),EXTRACT(MONTH FROM Date);
+SELECT year
+,SUM(CASE WHEN month= 1 THEN Revenue END) jan_revenue 
+,SUM(CASE WHEN month = 2 THEN Revenue END) feb_revenue
+,SUM(CASE WHEN month = 3 THEN Revenue END) mar_revenue 
+,SUM(CASE WHEN month = 4 THEN Revenue END) apr_revenue
+,SUM(CASE WHEN month= 5 THEN Revenue END) may_revenue
+,SUM(CASE WHEN month = 6 THEN Revenue END) jun_revenue
+,SUM(CASE WHEN month = 7 THEN Revenue END) jul_revenue
+,SUM(CASE WHEN month= 8 THEN Revenue END) aug_revenue
+,SUM(CASE WHEN month= 9 THEN Revenue END) sep_revenue
+,SUM(CASE WHEN month= 10 THEN Revenue END) oct_revenue 
+,SUM(CASE WHEN month= 11 THEN Revenue END) nov_revenue
+,SUM(CASE WHEN month = 12 THEN Revenue END) dec_revenue
+FROM (SELECT FactHotel Occupancy.*
+EXTRACT(YEAR FROM Date) year
+, EXTRACT(MONTH FROM Date) month
+FROM FactHotel Occupancy
+) invoices
+GROUP BY year
